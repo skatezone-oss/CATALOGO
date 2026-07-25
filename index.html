@@ -756,7 +756,14 @@
     function rutaImagen(nombre) {
       if (!nombre) return "";
       if (/^https?:\/\//i.test(nombre)) return nombre;
-      return CARPETA_IMAGENES + nombre.trim();
+
+      const nombreLimpio = nombre.trim().replace(/\\/g, "/");
+
+      // GitHub Pages distingue mayúsculas y minúsculas.
+      // Convierte .jpg o .jpeg a .JPG para coincidir con los archivos subidos.
+      const nombreCorregido = nombreLimpio.replace(/\.jpe?g$/i, ".JPG");
+
+      return CARPETA_IMAGENES + nombreCorregido;
     }
 
     function normalizar(texto) {
