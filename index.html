@@ -48,6 +48,7 @@
     .info{padding:13px 14px 15px}.info h3{font-size:16px;margin:0 0 6px}.info p{margin:0;color:var(--muted);font-size:14px}
     .chip{display:inline-block;margin-top:10px;padding:5px 9px;border-radius:999px;background:#e4f3f4;color:var(--oscuro);font-size:12px;font-weight:800}
     .estado{padding:45px 15px;text-align:center;color:var(--muted)}
+    .sin-imagen{width:100%;height:100%;min-height:260px;display:flex;align-items:center;justify-content:center;padding:20px;text-align:center;color:#6b7280;background:#ececf0;font-size:14px}
     .modal{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.72);display:grid;place-items:center;padding:18px}
     .modal-card{width:min(980px,100%);max-height:92vh;overflow:auto;border-radius:22px;background:#fff;position:relative}
     .cerrar-modal{position:absolute;right:12px;top:12px;width:42px;height:42px;border:0;border-radius:50%;background:rgba(0,0,0,.72);color:#fff;font-size:23px;z-index:5}
@@ -201,35 +202,198 @@ function mostrarCarpetas(){
   carpetaActual=null;$("vistaTrajes").classList.add("oculto");$("vistaCarpetas").classList.remove("oculto");$("volver").classList.add("oculto");
   $("subtitulo").textContent="Seleccione una carpeta";$("buscador").value="";$("categoria").value="";
 }
-function mostrarTrajes(lista){
-  $("gridTrajes").innerHTML="";$("estadoTrajes").classList.toggle("oculto",lista.length>0);
-  if(!lista.length){$("estadoTrajes").textContent="Esta carpeta no tiene trajes cargados."}
-  lista.forEach(t=>{
-    const a=document.createElement("article");a.className="traje";a.onclick=()=>abrirDetalle(t);
-    const p=document.createElement("div");p.className="portada";
-    const i=document.createElement("img");i.loading="lazy";i.src=ruta(t.fotoPortada||`${t.codigo}A.jpg`);i.alt=t.nombre||`Traje ${t.codigo}`;
-    i.onerror=()=>{i.remove();p.textContent="Imagen no disponible"};
-    p.append(i);const m=document.createElement("div");m.className="marca";p.append(m);
-    const inf=document.createElement("div");inf.className="info";inf.innerHTML=`<h3>${esc(t.nombre||`Traje ${t.codigo}`)}</h3><p>Traje N.º ${esc(t.codigo)}</p><span class="chip">${esc(t.categoria||"SIN CATEGORÍA")}</span>`;
-    a.append(p,inf);$("gridTrajes").appendChild(a);
+function mostrarTrajes(lista) {
+  $("gridTrajes").innerHTML = "";
+  $("estadoTrajes").classList.toggle("oculto", lista.length > 0);
+
+  if (!lista.length) {
+    $("estadoTrajes").textContent = "Esta carpeta no tiene trajes cargados.";
+  }
+
+  lista.forEach(t => {
+    const tarjeta = document.createElement("article");
+    tarjeta.className = "traje";
+    tarjeta.onclick = () => abrirDetalle(t);
+
+    const portada = document.createElement("div");
+    portada.className = "portada";
+
+    const imagen = document.createElement("img");
+    imagen.loading = "lazy";
+    imagen.alt = t.nombre || `Traje ${t.codigo}`;
+    imagen.draggable = false;
+
+    const nombreFoto = t.fotoPortada || `${t.codigo}A.jpg`;
+
+    cargarImagenConAlternativas(imagen, nombreFoto, () => {
+      imagen.remove();
+
+      const aviso = document.createElement("div");
+      aviso.className = "sin-imagen";
+      aviso.textContent = "Imagen no disponible";
+
+      portada.prepend(aviso);
+    });
+
+    portada.appendChild(imagen);
+
+    const marca = document.createElement("div");
+    marca.className = "marca";
+    portada.appendChild(marca);
+
+    const informacion = document.createElement("div");
+    informacion.className = "info";
+
+    informacion.innerHTML = `
+      <h3>${esc(t.nombre || `Traje ${t.codigo}`)}</h3>
+      <p>Traje N.º ${esc(t.codigo)}</p>
+      <span class="chip">${esc(t.categoria || "SIN CATEGORÍA")}</span>
+    `;
+
+    tarjeta.append(portada, informacion);
+    $("gridTrajes").appendChild(tarjeta);
   });
 }
-function filtrar(){
-  const q=norm($("buscador").value),cat=norm($("categoria").value);
-  mostrarTrajes(trajes.filter(t=>{const texto=norm([t.codigo,t.nombre,t.categoria,t.talles,t.cantidadPorTalle,t.estado,t.descripcion].join(" "));return(!q||texto.includes(q))&&(!cat||norm(t.categoria)===cat)}));
+
+function filtrar() {
+  const busqueda = norm($("buscador").value);
+  const categoria = norm($("categoria").value);
+
+  const resultado = trajes.filter(t => {
+    const texto = norm([
+      t.codigo,
+      t.nombre,
+      t.categoria,
+      t.talles,
+      t.cantidadPorTalle,
+      t.estado,
+      t.descripcion
+    ].join(" "));
+
+    const coincideBusqueda = !busqueda || texto.includes(busqueda);
+    const coincideCategoria = !categoria || norm(t.categoria) === categoria;
+
+    return coincideBusqueda && coincideCategoria;
+  });
+
+  mostrarTrajes(resultado);
 }
-async function abrirDetalle(t){
-  $("dNombre").textContent=t.nombre||`Traje ${t.codigo}`;$("dCodigo").textContent=`Traje N.º ${t.codigo}`;
-  $("dCategoria").textContent=t.categoria||"Sin especificar";$("dCantidad").textContent=t.cantidadTotal||"Sin especificar";
-  $("dTalles").textContent=t.talles||"Sin especificar";$("dStock").textContent=t.cantidadPorTalle||"Sin especificar";
-  $("dEstado").textContent=t.estado||"Sin especificar";$("dDescripcion").textContent=t.descripcion||"Sin observaciones";
-  fotos=(t.fotos||[]).filter(Boolean);if(!fotos.length)fotos=[t.fotoPortada||`${t.codigo}A.jpg`];indice=0;actualizarFoto();
-  $("modal").classList.remove("oculto");document.body.style.overflow="hidden";
+
+async function abrirDetalle(t) {
+  $("dNombre").textContent = t.nombre || `Traje ${t.codigo}`;
+  $("dCodigo").textContent = `Traje N.º ${t.codigo}`;
+  $("dCategoria").textContent = t.categoria || "Sin especificar";
+  $("dCantidad").textContent = t.cantidadTotal || "Sin especificar";
+  $("dTalles").textContent = t.talles || "Sin especificar";
+  $("dStock").textContent = t.cantidadPorTalle || "Sin especificar";
+  $("dEstado").textContent = t.estado || "Sin especificar";
+  $("dDescripcion").textContent = t.descripcion || "Sin observaciones";
+
+  fotos = (t.fotos || [])
+    .map(foto => String(foto || "").trim())
+    .filter(Boolean);
+
+  if (!fotos.length) {
+    fotos = [t.fotoPortada || `${t.codigo}A.jpg`];
+  }
+
+  indice = 0;
+  actualizarFoto();
+
+  $("modal").classList.remove("oculto");
+  document.body.style.overflow = "hidden";
 }
-function cerrarModal(){$("modal").classList.add("oculto");document.body.style.overflow=""}
-function mover(n){if(!fotos.length)return;indice=(indice+n+fotos.length)%fotos.length;actualizarFoto()}
-function actualizarFoto(){$("fotoDetalle").src=ruta(fotos[indice]);$("contador").textContent=`${indice+1} / ${fotos.length}`;$("anterior").style.display=fotos.length>1?"block":"none";$("siguiente").style.display=fotos.length>1?"block":"none"}
-function ruta(n){if(/^https?:\/\//i.test(n||""))return n;return CARPETA_IMAGENES+String(n||"").trim().replace(/\\/g,"/").replace(/\.jpe?g$/i,".JPG")}
+
+function cerrarModal() {
+  $("modal").classList.add("oculto");
+  document.body.style.overflow = "";
+}
+
+function mover(cantidad) {
+  if (!fotos.length) return;
+
+  indice = (indice + cantidad + fotos.length) % fotos.length;
+  actualizarFoto();
+}
+
+function actualizarFoto() {
+  const imagen = $("fotoDetalle");
+  const nombreFoto = fotos[indice];
+
+  imagen.style.display = "block";
+  imagen.alt = "Fotografía del traje";
+
+  cargarImagenConAlternativas(imagen, nombreFoto, () => {
+    imagen.removeAttribute("src");
+    imagen.alt = "Imagen no disponible";
+  });
+
+  $("contador").textContent = `${indice + 1} / ${fotos.length}`;
+  $("anterior").style.display = fotos.length > 1 ? "block" : "none";
+  $("siguiente").style.display = fotos.length > 1 ? "block" : "none";
+}
+
+function cargarImagenConAlternativas(elementoImagen, nombre, alFallar) {
+  const alternativas = generarAlternativasImagen(nombre);
+  let posicion = 0;
+
+  function intentar() {
+    if (posicion >= alternativas.length) {
+      elementoImagen.onerror = null;
+
+      if (typeof alFallar === "function") {
+        alFallar();
+      }
+
+      return;
+    }
+
+    elementoImagen.src = alternativas[posicion];
+    posicion++;
+  }
+
+  elementoImagen.onerror = intentar;
+  intentar();
+}
+
+function generarAlternativasImagen(nombre) {
+  let archivo = String(nombre || "")
+    .trim()
+    .replace(/\/g, "/");
+
+  if (!archivo) {
+    return [];
+  }
+
+  if (/^https?:\/\//i.test(archivo)) {
+    return [archivo];
+  }
+
+  archivo = archivo.replace(/^imagenes\//i, "");
+
+  const nombreSinExtension = archivo.replace(/\.(jpg|jpeg|png|webp)$/i, "");
+
+  const nombres = [
+    archivo,
+    `${nombreSinExtension}.jpg`,
+    `${nombreSinExtension}.JPG`,
+    `${nombreSinExtension}.jpeg`,
+    `${nombreSinExtension}.JPEG`,
+    `${nombreSinExtension}.png`,
+    `${nombreSinExtension}.PNG`,
+    `${nombreSinExtension}.webp`,
+    `${nombreSinExtension}.WEBP`
+  ];
+
+  return [...new Set(nombres)]
+    .filter(Boolean)
+    .map(nombreArchivo => CARPETA_IMAGENES + nombreArchivo);
+}
+
+function ruta(nombre) {
+  const alternativas = generarAlternativasImagen(nombre);
+  return alternativas[0] || "";
+}
 function norm(v){return String(v||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim()}
 function esc(v){return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
 </script>
