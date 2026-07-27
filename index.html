@@ -148,61 +148,40 @@ if(correoSesion&&claveSesion) validarSesion();
 
 function api(parametros) {
   return new Promise((resolve, reject) => {
-    const callback =
-      "catalogoRespuesta_" +
-      Date.now() +
-      "_" +
-      Math.random().toString(36).slice(2);
-
+    const callback = "prueba";
     const script = document.createElement("script");
-    let finalizado = false;
+    let terminado = false;
 
     function limpiar() {
       if (script.parentNode) {
         script.parentNode.removeChild(script);
       }
-
-      try {
-        delete window[callback];
-      } catch (error) {
-        window[callback] = undefined;
-      }
     }
 
     const temporizador = setTimeout(() => {
-      if (finalizado) return;
+      if (terminado) return;
 
-      finalizado = true;
+      terminado = true;
       limpiar();
-
-      reject(
-        new Error(
-          "El servidor no respondió. Revisá que el Apps Script esté publicado como Cualquier persona."
-        )
-      );
+      reject(new Error("El servidor tardó demasiado en responder."));
     }, 20000);
 
-    window[callback] = function(datos) {
-      if (finalizado) return;
+    window.prueba = function(datos) {
+      if (terminado) return;
 
-      finalizado = true;
+      terminado = true;
       clearTimeout(temporizador);
       limpiar();
       resolve(datos);
     };
 
     script.onerror = function() {
-      if (finalizado) return;
+      if (terminado) return;
 
-      finalizado = true;
+      terminado = true;
       clearTimeout(temporizador);
       limpiar();
-
-      reject(
-        new Error(
-          "No se pudo conectar con el catálogo. El Apps Script debe aceptar callback JSONP."
-        )
-      );
+      reject(new Error("No se pudo conectar con el catálogo."));
     };
 
     const consulta = [];
@@ -215,13 +194,8 @@ function api(parametros) {
       );
     });
 
-    consulta.push(
-      "callback=" + encodeURIComponent(callback)
-    );
-
-    consulta.push(
-      "_=" + Date.now()
-    );
+    consulta.push("callback=prueba");
+    consulta.push("_=" + Date.now());
 
     script.src =
       URL_APPS_SCRIPT +
