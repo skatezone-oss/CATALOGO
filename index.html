@@ -1,1 +1,466 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <title>Catálogo privado - Skate Zone</title>
+  <style>
+    :root{
+      --fondo:#f4f5f7;--tarjeta:#fff;--texto:#202124;--muted:#6b7280;
+      --principal:#2b9298;--oscuro:#18666b;--borde:#e5e7eb;--danger:#b3261e;
+    }
+    *{box-sizing:border-box} body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--fondo);color:var(--texto)}
+    button,input,select{font:inherit}.oculto{display:none!important}
+    .acceso{min-height:100vh;display:grid;place-items:center;padding:22px;background:
+      radial-gradient(circle at top left,rgba(43,146,152,.18),transparent 34%),
+      radial-gradient(circle at bottom right,rgba(43,146,152,.12),transparent 32%),var(--fondo)}
+    .acceso-card{width:min(440px,100%);background:#fff;border:1px solid var(--borde);border-radius:24px;padding:30px;
+      box-shadow:0 18px 50px rgba(0,0,0,.10);text-align:center}
+    .logo{width:138px;height:138px;margin:0 auto 16px}.logo img{width:100%;height:100%;object-fit:contain}
+    h1{margin:0 0 10px}.sub{color:var(--muted);line-height:1.5;margin:0 0 20px}
+    .campo{width:100%;border:1px solid #cfd4dc;border-radius:14px;padding:14px 15px;outline:none;margin-bottom:12px;background:#fff}
+    .campo:focus{border-color:var(--principal);box-shadow:0 0 0 3px rgba(43,146,152,.15)}
+    .btn{border:none;border-radius:14px;padding:13px 18px;cursor:pointer;font-weight:700}
+    .btn-principal{width:100%;background:var(--principal);color:#fff}.btn-principal:hover{background:var(--oscuro)}
+    .error{color:var(--danger);font-size:14px;min-height:20px;margin-top:10px}
+    header{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--borde)}
+    .barra{max-width:1250px;margin:auto;padding:14px 18px;display:flex;gap:14px;justify-content:space-between;align-items:center}
+    .titulo h1{font-size:21px;margin:0}.titulo small{color:var(--muted)}
+    .acciones{display:flex;gap:8px}.secundario{border:1px solid var(--borde);background:#fff;border-radius:12px;padding:9px 12px;cursor:pointer}
+    .contenedor{max-width:1250px;margin:auto;padding:22px 18px 42px}
+    .encabezado-seccion{display:flex;justify-content:space-between;align-items:end;gap:15px;margin-bottom:18px}
+    .encabezado-seccion h2{margin:0 0 5px}.encabezado-seccion p{margin:0;color:var(--muted)}
+    .grid-carpetas{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:17px}
+    .carpeta{background:#fff;border:1px solid var(--borde);border-radius:19px;padding:22px;text-align:left;cursor:pointer;
+      box-shadow:0 5px 16px rgba(0,0,0,.04);transition:.2s}
+    .carpeta:hover{transform:translateY(-3px);box-shadow:0 12px 25px rgba(0,0,0,.09)}
+    .carpeta-icono{width:52px;height:42px;border-radius:10px 10px 12px 12px;background:var(--principal);position:relative;margin-bottom:18px}
+    .carpeta-icono:before{content:"";position:absolute;top:-8px;left:6px;width:25px;height:10px;border-radius:6px 6px 0 0;background:var(--principal)}
+    .carpeta h3{margin:0 0 7px;font-size:19px}.carpeta p{margin:0;color:var(--muted);line-height:1.45}
+    .controles{display:grid;grid-template-columns:1fr 190px;gap:12px;margin-bottom:18px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:18px}
+    .traje{background:#fff;border:1px solid var(--borde);border-radius:18px;overflow:hidden;cursor:pointer;box-shadow:0 5px 16px rgba(0,0,0,.04)}
+    .portada{aspect-ratio:3/4;position:relative;background:#ececf0;overflow:hidden}
+    .portada img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+    .marca{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
+    .marca:after{content:"";width:58%;aspect-ratio:1;background:url("assets/marca-agua.png") center/contain no-repeat;opacity:.06}
+    .info{padding:13px 14px 15px}.info h3{font-size:16px;margin:0 0 6px}.info p{margin:0;color:var(--muted);font-size:14px}
+    .chip{display:inline-block;margin-top:10px;padding:5px 9px;border-radius:999px;background:#e4f3f4;color:var(--oscuro);font-size:12px;font-weight:800}
+    .estado{padding:45px 15px;text-align:center;color:var(--muted)}
+    .sin-imagen{width:100%;height:100%;min-height:260px;display:flex;align-items:center;justify-content:center;padding:20px;text-align:center;color:#6b7280;background:#ececf0;font-size:14px}
+    .modal{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.72);display:grid;place-items:center;padding:18px}
+    .modal-card{width:min(980px,100%);max-height:92vh;overflow:auto;border-radius:22px;background:#fff;position:relative}
+    .cerrar-modal{position:absolute;right:12px;top:12px;width:42px;height:42px;border:0;border-radius:50%;background:rgba(0,0,0,.72);color:#fff;font-size:23px;z-index:5}
+    .detalle{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(300px,.85fr);min-height:580px}
+    .galeria{background:#111;position:relative;min-height:580px;display:grid;place-items:center;overflow:hidden}
+    .galeria img{width:100%;height:100%;max-height:78vh;object-fit:contain;pointer-events:none}
+    .nav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:58px;border:0;border-radius:12px;background:rgba(0,0,0,.55);color:#fff;font-size:26px;z-index:3}
+    .ant{left:12px}.sig{right:12px}.contador{position:absolute;bottom:15px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.6);color:#fff;padding:7px 12px;border-radius:999px}
+    .detalle-info{padding:36px 30px}.detalle-info h2{font-size:30px;margin:0 0 7px}.codigo{color:var(--muted);margin-bottom:20px}
+    .dato{padding:12px 0;border-bottom:1px solid var(--borde)}.dato strong{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;text-transform:uppercase}
+    .pie{text-align:center;color:var(--muted);font-size:12px;padding:28px 15px 5px}
+    @media(max-width:760px){.controles{grid-template-columns:1fr}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.detalle{grid-template-columns:1fr}.galeria{min-height:52vh}.detalle-info{padding:25px 20px}.barra{align-items:flex-start}}
+    @media(max-width:390px){.grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<section id="acceso" class="acceso">
+  <div class="acceso-card">
+    <div class="logo"><img src="assets/logo-skate-zone.png" alt="Skate Zone"></div>
+    <h1>Catálogo privado</h1>
+    <p id="textoAcceso" class="sub">Acceso exclusivo para profesores.</p>
+    <input id="correo" class="campo" type="email" placeholder="Correo electrónico" autocomplete="email">
+    <input id="clave" class="campo" type="password" placeholder="Contraseña" autocomplete="current-password">
+    <button id="ingresar" class="btn btn-principal">Ingresar</button>
+    <div id="error" class="error"></div>
+  </div>
+</section>
 
+<main id="app" class="oculto">
+  <header>
+    <div class="barra">
+      <div class="titulo"><h1 id="nombreCatalogo">Catálogo de trajes</h1><small id="subtitulo">Seleccione una carpeta</small></div>
+      <div class="acciones"><button id="volver" class="secundario oculto">Carpetas</button><button id="salir" class="secundario">Cerrar</button></div>
+    </div>
+  </header>
+  <div class="contenedor">
+    <section id="vistaCarpetas">
+      <div class="encabezado-seccion"><div><h2>Carpetas disponibles</h2><p>Elegí la selección que querés consultar.</p></div></div>
+      <div id="estadoCarpetas" class="estado">Cargando carpetas…</div>
+      <div id="gridCarpetas" class="grid-carpetas"></div>
+    </section>
+    <section id="vistaTrajes" class="oculto">
+      <div class="controles">
+        <input id="buscador" class="campo" type="search" placeholder="Buscar por número, nombre, talle o categoría">
+        <select id="categoria" class="campo"><option value="">Todas las categorías</option><option>INFANTIL</option><option>JUVENIL</option><option>ADULTO</option></select>
+      </div>
+      <div id="estadoTrajes" class="estado">Cargando trajes…</div>
+      <div id="gridTrajes" class="grid"></div>
+    </section>
+    <div class="pie">Catálogo privado. Las fotografías poseen marca de agua y son de uso exclusivo.</div>
+  </div>
+</main>
+
+<section id="modal" class="modal oculto">
+  <div class="modal-card">
+    <button id="cerrarModal" class="cerrar-modal">×</button>
+    <div class="detalle">
+      <div class="galeria">
+        <button id="anterior" class="nav ant">‹</button>
+        <img id="fotoDetalle" alt="Fotografía del traje">
+        <div class="marca"></div>
+        <button id="siguiente" class="nav sig">›</button>
+        <div id="contador" class="contador"></div>
+      </div>
+      <div class="detalle-info">
+        <h2 id="dNombre"></h2><div id="dCodigo" class="codigo"></div>
+        <div class="dato"><strong>Categoría</strong><span id="dCategoria"></span></div>
+        <div class="dato"><strong>Cantidad total</strong><span id="dCantidad"></span></div>
+        <div class="dato"><strong>Talles disponibles</strong><span id="dTalles"></span></div>
+        <div class="dato"><strong>Cantidad por talle</strong><span id="dStock"></span></div>
+        <div class="dato"><strong>Estado</strong><span id="dEstado"></span></div>
+        <div class="dato"><strong>Descripción</strong><span id="dDescripcion"></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbzH0f0kKBGIzHTe4oOQW1xHI14h1DfXrU7xiIS4E5SbXQ0EKrO8WJZjy39iFcqsQdzhIQ/exec";
+const CARPETA_IMAGENES = "imagenes/";
+let correoSesion=sessionStorage.getItem("catalogoCorreo")||"";
+let claveSesion=sessionStorage.getItem("catalogoClave")||"";
+let trajes=[],fotos=[],indice=0,carpetaActual=null;
+const $=id=>document.getElementById(id);
+
+$("ingresar").onclick=ingresar;
+$("clave").addEventListener("keydown",e=>{if(e.key==="Enter")ingresar()});
+$("salir").onclick=()=>{sessionStorage.clear();location.reload()};
+$("volver").onclick=mostrarCarpetas;
+$("buscador").oninput=filtrar;$("categoria").onchange=filtrar;
+$("cerrarModal").onclick=cerrarModal;$("anterior").onclick=()=>mover(-1);$("siguiente").onclick=()=>mover(1);
+$("modal").onclick=e=>{if(e.target===$("modal"))cerrarModal()};
+document.addEventListener("contextmenu",e=>e.preventDefault());
+document.addEventListener("dragstart",e=>e.preventDefault());
+
+if(correoSesion&&claveSesion) validarSesion();
+
+function api(parametros) {
+  return new Promise((resolve, reject) => {
+    if (!URL_APPS_SCRIPT.startsWith("https://script.google.com/")) {
+      reject(new Error("Falta configurar la URL del Apps Script."));
+      return;
+    }
+
+    const nombreCallback =
+      "catalogoCallback_" + Date.now() + "_" + Math.random().toString(36).slice(2);
+
+    const script = document.createElement("script");
+    const temporizador = setTimeout(() => {
+      limpiar();
+      reject(new Error("El servidor tardó demasiado en responder. Revisá la implementación del Apps Script."));
+    }, 20000);
+
+    function limpiar() {
+      clearTimeout(temporizador);
+      delete window[nombreCallback];
+      if (script.parentNode) script.parentNode.removeChild(script);
+    }
+
+    window[nombreCallback] = datos => {
+      limpiar();
+      resolve(datos);
+    };
+
+    script.onerror = () => {
+      limpiar();
+      reject(new Error("No se pudo conectar con el catálogo."));
+    };
+
+    const consulta = new URLSearchParams({
+      ...parametros,
+      callback: nombreCallback,
+      _: Date.now()
+    });
+
+    script.src = `${URL_APPS_SCRIPT}?${consulta.toString()}`;
+    document.head.appendChild(script);
+  });
+}
+async function ingresar() {
+  const correo = $("correo").value.trim().toLowerCase();
+  const clave = $("clave").value.trim();
+  const boton = $("ingresar");
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) {
+    $("error").textContent = "Ingresá un correo electrónico válido.";
+    return;
+  }
+
+  if (!clave) {
+    $("error").textContent = "Ingresá la contraseña.";
+    return;
+  }
+
+  boton.disabled = true;
+  boton.textContent = "Verificando…";
+  $("error").textContent = "Conectando con el catálogo…";
+
+  try {
+    const d = await api({
+      accion: "login",
+      correo,
+      clave,
+      agente: navigator.userAgent
+    });
+
+    if (!d || d.estado !== "OK") {
+      throw new Error((d && d.mensaje) || "Correo o contraseña incorrectos.");
+    }
+
+    correoSesion = correo;
+    claveSesion = clave;
+    sessionStorage.setItem("catalogoCorreo", correo);
+    sessionStorage.setItem("catalogoClave", clave);
+    iniciar(d);
+  } catch (e) {
+    $("error").textContent =
+      e.message || "No se pudo ingresar. Intentá nuevamente.";
+  } finally {
+    boton.disabled = false;
+    boton.textContent = "Ingresar";
+  }
+}
+async function validarSesion(){
+  try{
+    const d=await api({accion:"login",correo:correoSesion,clave:claveSesion,agente:navigator.userAgent,restaurar:"SI"});
+    if(d.estado!=="OK") throw new Error();
+    iniciar(d);
+  }catch(e){sessionStorage.clear()}
+}
+function iniciar(d){
+  $("acceso").classList.add("oculto");$("app").classList.remove("oculto");
+  $("nombreCatalogo").textContent=d.nombreCatalogo||"Catálogo de trajes";
+  $("textoAcceso").textContent=d.textoAcceso||"Acceso exclusivo.";
+  renderCarpetas(d.carpetas||[]);
+}
+function renderCarpetas(lista){
+  $("gridCarpetas").innerHTML="";$("estadoCarpetas").classList.toggle("oculto",lista.length>0);
+  if(!lista.length){$("estadoCarpetas").textContent="No hay carpetas activas."}
+  lista.forEach(c=>{
+    const b=document.createElement("button");b.className="carpeta";
+    b.innerHTML=`<div class="carpeta-icono"></div><h3>${esc(c.nombre)}</h3><p>${esc(c.descripcion||"")}</p>`;
+    b.onclick=()=>abrirCarpeta(c);$("gridCarpetas").appendChild(b);
+  });
+}
+async function abrirCarpeta(c){
+  carpetaActual=c;$("vistaCarpetas").classList.add("oculto");$("vistaTrajes").classList.remove("oculto");$("volver").classList.remove("oculto");
+  $("subtitulo").textContent=c.nombre;$("estadoTrajes").classList.remove("oculto");$("estadoTrajes").textContent="Cargando trajes…";$("gridTrajes").innerHTML="";
+  try{
+    const d=await api({accion:"carpeta",correo:correoSesion,clave:claveSesion,carpeta:c.id,agente:navigator.userAgent});
+    if(d.estado!=="OK") throw new Error(d.mensaje);
+    trajes=d.trajes||[];mostrarTrajes(trajes);
+  }catch(e){$("estadoTrajes").textContent=e.message||"No se pudo abrir la carpeta."}
+}
+function mostrarCarpetas(){
+  carpetaActual=null;$("vistaTrajes").classList.add("oculto");$("vistaCarpetas").classList.remove("oculto");$("volver").classList.add("oculto");
+  $("subtitulo").textContent="Seleccione una carpeta";$("buscador").value="";$("categoria").value="";
+}
+function mostrarTrajes(lista) {
+  $("gridTrajes").innerHTML = "";
+  $("estadoTrajes").classList.toggle("oculto", lista.length > 0);
+
+  if (!lista.length) {
+    $("estadoTrajes").textContent = "Esta carpeta no tiene trajes cargados.";
+  }
+
+  lista.forEach(t => {
+    const tarjeta = document.createElement("article");
+    tarjeta.className = "traje";
+    tarjeta.onclick = () => abrirDetalle(t);
+
+    const portada = document.createElement("div");
+    portada.className = "portada";
+
+    const imagen = document.createElement("img");
+    imagen.loading = "lazy";
+    imagen.alt = t.nombre || `Traje ${t.codigo}`;
+    imagen.draggable = false;
+
+    const nombreFoto = t.fotoPortada || `${t.codigo}A.jpg`;
+
+    cargarImagenConAlternativas(imagen, nombreFoto, () => {
+      imagen.remove();
+
+      const aviso = document.createElement("div");
+      aviso.className = "sin-imagen";
+      aviso.textContent = "Imagen no disponible";
+
+      portada.prepend(aviso);
+    });
+
+    portada.appendChild(imagen);
+
+    const marca = document.createElement("div");
+    marca.className = "marca";
+    portada.appendChild(marca);
+
+    const informacion = document.createElement("div");
+    informacion.className = "info";
+
+    informacion.innerHTML = `
+      <h3>${esc(t.nombre || `Traje ${t.codigo}`)}</h3>
+      <p>Traje N.º ${esc(t.codigo)}</p>
+      <span class="chip">${esc(t.categoria || "SIN CATEGORÍA")}</span>
+    `;
+
+    tarjeta.append(portada, informacion);
+    $("gridTrajes").appendChild(tarjeta);
+  });
+}
+
+function filtrar() {
+  const busqueda = norm($("buscador").value);
+  const categoria = norm($("categoria").value);
+
+  const resultado = trajes.filter(t => {
+    const texto = norm([
+      t.codigo,
+      t.nombre,
+      t.categoria,
+      t.talles,
+      t.cantidadPorTalle,
+      t.estado,
+      t.descripcion
+    ].join(" "));
+
+    const coincideBusqueda = !busqueda || texto.includes(busqueda);
+    const coincideCategoria = !categoria || norm(t.categoria) === categoria;
+
+    return coincideBusqueda && coincideCategoria;
+  });
+
+  mostrarTrajes(resultado);
+}
+
+async function abrirDetalle(t) {
+  $("dNombre").textContent = t.nombre || `Traje ${t.codigo}`;
+  $("dCodigo").textContent = `Traje N.º ${t.codigo}`;
+  $("dCategoria").textContent = t.categoria || "Sin especificar";
+  $("dCantidad").textContent = t.cantidadTotal || "Sin especificar";
+  $("dTalles").textContent = t.talles || "Sin especificar";
+  $("dStock").textContent = t.cantidadPorTalle || "Sin especificar";
+  $("dEstado").textContent = t.estado || "Sin especificar";
+  $("dDescripcion").textContent = t.descripcion || "Sin observaciones";
+
+  fotos = (t.fotos || [])
+    .map(foto => String(foto || "").trim())
+    .filter(Boolean);
+
+  if (!fotos.length) {
+    fotos = [t.fotoPortada || `${t.codigo}A.jpg`];
+  }
+
+  indice = 0;
+  actualizarFoto();
+
+  $("modal").classList.remove("oculto");
+  document.body.style.overflow = "hidden";
+}
+
+function cerrarModal() {
+  $("modal").classList.add("oculto");
+  document.body.style.overflow = "";
+}
+
+function mover(cantidad) {
+  if (!fotos.length) return;
+
+  indice = (indice + cantidad + fotos.length) % fotos.length;
+  actualizarFoto();
+}
+
+function actualizarFoto() {
+  const imagen = $("fotoDetalle");
+  const nombreFoto = fotos[indice];
+
+  imagen.style.display = "block";
+  imagen.alt = "Fotografía del traje";
+
+  cargarImagenConAlternativas(imagen, nombreFoto, () => {
+    imagen.removeAttribute("src");
+    imagen.alt = "Imagen no disponible";
+  });
+
+  $("contador").textContent = `${indice + 1} / ${fotos.length}`;
+  $("anterior").style.display = fotos.length > 1 ? "block" : "none";
+  $("siguiente").style.display = fotos.length > 1 ? "block" : "none";
+}
+
+function cargarImagenConAlternativas(elementoImagen, nombre, alFallar) {
+  const alternativas = generarAlternativasImagen(nombre);
+  let posicion = 0;
+
+  function intentar() {
+    if (posicion >= alternativas.length) {
+      elementoImagen.onerror = null;
+
+      if (typeof alFallar === "function") {
+        alFallar();
+      }
+
+      return;
+    }
+
+    elementoImagen.src = alternativas[posicion];
+    posicion++;
+  }
+
+  elementoImagen.onerror = intentar;
+  intentar();
+}
+
+function generarAlternativasImagen(nombre) {
+  let archivo = String(nombre || "")
+    .trim()
+    .replace(/\\/g, "/");
+
+  if (!archivo) {
+    return [];
+  }
+
+  if (/^https?:\/\//i.test(archivo)) {
+    return [archivo];
+  }
+
+  archivo = archivo.replace(/^imagenes\//i, "");
+
+  const nombreSinExtension = archivo.replace(/\.(jpg|jpeg|png|webp)$/i, "");
+
+  const nombres = [
+    archivo,
+    `${nombreSinExtension}.jpg`,
+    `${nombreSinExtension}.JPG`,
+    `${nombreSinExtension}.jpeg`,
+    `${nombreSinExtension}.JPEG`,
+    `${nombreSinExtension}.png`,
+    `${nombreSinExtension}.PNG`,
+    `${nombreSinExtension}.webp`,
+    `${nombreSinExtension}.WEBP`
+  ];
+
+  return [...new Set(nombres)]
+    .filter(Boolean)
+    .map(nombreArchivo => CARPETA_IMAGENES + nombreArchivo);
+}
+
+function ruta(nombre) {
+  const alternativas = generarAlternativasImagen(nombre);
+  return alternativas[0] || "";
+}
+function norm(v){return String(v||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim()}
+function esc(v){return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
+</script>
+</body>
+</html>
