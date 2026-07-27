@@ -127,7 +127,7 @@
 </section>
 
 <script>
-const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbyNgDNXFB_OILS03KkLl98wxpZymDYIC9YKqMBfmLst0Fxqrgjnzm0va_wq41EHNAwK/exec";
+const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbzH0f0kKBGIzHTe4oOQW1xHI14h1DfXrU7xiIS4E5SbXQ0EKrO8WJZjy39iFcqsQdzhIQ/exec";
 const CARPETA_IMAGENES = "imagenes/";
 let correoSesion=sessionStorage.getItem("catalogoCorreo")||"";
 let claveSesion=sessionStorage.getItem("catalogoClave")||"";
@@ -359,7 +359,7 @@ function cargarImagenConAlternativas(elementoImagen, nombre, alFallar) {
 function generarAlternativasImagen(nombre) {
   let archivo = String(nombre || "")
     .trim()
-    .replace(/\/g, "/");
+    .replace(/\\/g, "/");
 
   if (!archivo) {
     return [];
