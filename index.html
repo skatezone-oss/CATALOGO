@@ -44,7 +44,7 @@
     .portada{aspect-ratio:3/4;position:relative;background:#ececf0;overflow:hidden}
     .portada img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
     .marca{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
-    .marca:after{content:"";width:58%;aspect-ratio:1;background:url("assets/marca-agua.png") center/contain no-repeat;opacity:.06}
+    .marca:after{content:"";width:58%;aspect-ratio:1;background:url("https://skatezone-oss.github.io/CATALOGO/assets/marca-agua.png") center/contain no-repeat;opacity:.06}
     .info{padding:13px 14px 15px}.info h3{font-size:16px;margin:0 0 6px}.info p{margin:0;color:var(--muted);font-size:14px}
     .chip{display:inline-block;margin-top:10px;padding:5px 9px;border-radius:999px;background:#e4f3f4;color:var(--oscuro);font-size:12px;font-weight:800}
     .estado{padding:45px 15px;text-align:center;color:var(--muted)}
@@ -67,13 +67,14 @@
 <body>
 <section id="acceso" class="acceso">
   <div class="acceso-card">
-    <div class="logo"><img src="assets/logo-skate-zone.png" alt="Skate Zone"></div>
+    <div class="logo"><img src="https://skatezone-oss.github.io/CATALOGO/assets/logo-skate-zone.png" alt="Skate Zone"></div>
     <h1>Catálogo privado</h1>
     <p id="textoAcceso" class="sub">Acceso exclusivo para profesores.</p>
     <input id="correo" class="campo" type="email" placeholder="Correo electrónico" autocomplete="email">
     <input id="clave" class="campo" type="password" placeholder="Contraseña" autocomplete="current-password">
     <button id="ingresar" class="btn btn-principal">Ingresar</button>
     <div id="error" class="error"></div>
+    <div style="margin-top:8px;font-size:11px;color:#9ca3af">Abrí siempre el enlace oficial recibido.</div>
   </div>
 </section>
 
@@ -127,8 +128,7 @@
 </section>
 
 <script>
-const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbyZCuGqVD-I3FEECeGG3tRp7GoiMdS3bs35EPZssr15jIHeg-RE4Yvn7fTWyBfbQEI/exec";
-const CARPETA_IMAGENES = "imagenes/";
+const CARPETA_IMAGENES = "https://skatezone-oss.github.io/CATALOGO/imagenes/";
 let correoSesion=sessionStorage.getItem("catalogoCorreo")||"";
 let claveSesion=sessionStorage.getItem("catalogoClave")||"";
 let trajes=[],fotos=[],indice=0,carpetaActual=null;
@@ -148,62 +148,44 @@ if(correoSesion&&claveSesion) validarSesion();
 
 function api(parametros) {
   return new Promise((resolve, reject) => {
-    const callback = "prueba";
-    const script = document.createElement("script");
-    let terminado = false;
-
-    function limpiar() {
-      if (script.parentNode) {
-        script.parentNode.removeChild(script);
-      }
+    if (
+      typeof google === "undefined" ||
+      !google.script ||
+      !google.script.run
+    ) {
+      reject(
+        new Error(
+          "La página debe abrirse desde el enlace oficial del catálogo."
+        )
+      );
+      return;
     }
 
-    const temporizador = setTimeout(() => {
-      if (terminado) return;
+    const accion = String(parametros.accion || "").toLowerCase();
 
-      terminado = true;
-      limpiar();
-      reject(new Error("El servidor tardó demasiado en responder."));
-    }, 20000);
+    let ejecutor = google.script.run
+      .withSuccessHandler(resolve)
+      .withFailureHandler(error => {
+        reject(
+          new Error(
+            error && error.message
+              ? error.message
+              : "No se pudo consultar el catálogo."
+          )
+        );
+      });
 
-    window.prueba = function(datos) {
-      if (terminado) return;
+    if (accion === "login") {
+      ejecutor.iniciarSesion(parametros);
+      return;
+    }
 
-      terminado = true;
-      clearTimeout(temporizador);
-      limpiar();
-      resolve(datos);
-    };
+    if (accion === "carpeta") {
+      ejecutor.cargarCarpeta(parametros);
+      return;
+    }
 
-    script.onerror = function() {
-      if (terminado) return;
-
-      terminado = true;
-      clearTimeout(temporizador);
-      limpiar();
-      reject(new Error("No se pudo conectar con el catálogo."));
-    };
-
-    const consulta = [];
-
-    Object.keys(parametros).forEach(function(clave) {
-      consulta.push(
-        encodeURIComponent(clave) +
-        "=" +
-        encodeURIComponent(String(parametros[clave] ?? ""))
-      );
-    });
-
-    consulta.push("callback=prueba");
-    consulta.push("_=" + Date.now());
-
-    script.src =
-      URL_APPS_SCRIPT +
-      "?" +
-      consulta.join("&");
-
-    script.async = true;
-    document.head.appendChild(script);
+    reject(new Error("Acción no reconocida."));
   });
 }
 async function ingresar() {
