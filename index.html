@@ -127,7 +127,7 @@
 </section>
 
 <script>
-const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbyNgDNXFB_OILS03KkLl98wxpZymDYIC9YKqMBfmLst0Fxqrgjnzm0va_wq41EHNAwK/exec";
+const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbyZCuGqVD-I3FEECeGG3tRp7GoiMdS3bs35EPZssr15jIHeg-RE4Yvn7fTWyBfbQEI/exec";
 const CARPETA_IMAGENES = "imagenes/";
 let correoSesion=sessionStorage.getItem("catalogoCorreo")||"";
 let claveSesion=sessionStorage.getItem("catalogoClave")||"";
@@ -148,43 +148,87 @@ if(correoSesion&&claveSesion) validarSesion();
 
 function api(parametros) {
   return new Promise((resolve, reject) => {
-    if (!URL_APPS_SCRIPT.startsWith("https://script.google.com/")) {
-      reject(new Error("Falta configurar la URL del Apps Script."));
-      return;
-    }
-
-    const nombreCallback =
-      "catalogoCallback_" + Date.now() + "_" + Math.random().toString(36).slice(2);
+    const callback =
+      "catalogoRespuesta_" +
+      Date.now() +
+      "_" +
+      Math.random().toString(36).slice(2);
 
     const script = document.createElement("script");
-    const temporizador = setTimeout(() => {
-      limpiar();
-      reject(new Error("El servidor tardó demasiado en responder. Revisá la implementación del Apps Script."));
-    }, 20000);
+    let finalizado = false;
 
     function limpiar() {
-      clearTimeout(temporizador);
-      delete window[nombreCallback];
-      if (script.parentNode) script.parentNode.removeChild(script);
+      if (script.parentNode) {
+        script.parentNode.removeChild(script);
+      }
+
+      try {
+        delete window[callback];
+      } catch (error) {
+        window[callback] = undefined;
+      }
     }
 
-    window[nombreCallback] = datos => {
+    const temporizador = setTimeout(() => {
+      if (finalizado) return;
+
+      finalizado = true;
+      limpiar();
+
+      reject(
+        new Error(
+          "El servidor no respondió. Revisá que el Apps Script esté publicado como Cualquier persona."
+        )
+      );
+    }, 20000);
+
+    window[callback] = function(datos) {
+      if (finalizado) return;
+
+      finalizado = true;
+      clearTimeout(temporizador);
       limpiar();
       resolve(datos);
     };
 
-    script.onerror = () => {
+    script.onerror = function() {
+      if (finalizado) return;
+
+      finalizado = true;
+      clearTimeout(temporizador);
       limpiar();
-      reject(new Error("No se pudo conectar con el catálogo."));
+
+      reject(
+        new Error(
+          "No se pudo conectar con el catálogo. El Apps Script debe aceptar callback JSONP."
+        )
+      );
     };
 
-    const consulta = new URLSearchParams({
-      ...parametros,
-      callback: nombreCallback,
-      _: Date.now()
+    const consulta = [];
+
+    Object.keys(parametros).forEach(function(clave) {
+      consulta.push(
+        encodeURIComponent(clave) +
+        "=" +
+        encodeURIComponent(String(parametros[clave] ?? ""))
+      );
     });
 
-    script.src = `${URL_APPS_SCRIPT}?${consulta.toString()}`;
+    consulta.push(
+      "callback=" + encodeURIComponent(callback)
+    );
+
+    consulta.push(
+      "_=" + Date.now()
+    );
+
+    script.src =
+      URL_APPS_SCRIPT +
+      "?" +
+      consulta.join("&");
+
+    script.async = true;
     document.head.appendChild(script);
   });
 }
